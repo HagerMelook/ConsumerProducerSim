@@ -7,18 +7,18 @@
         <button class="btn btn-primary me-2" @click="addQueue"><i class="fas fa-plus"></i> Add Queue</button>
         <button class="btn btn-success" @click="addMachine"><i class="fas fa-plus"></i> Add Machine</button>
       </div>
-      <div>
+      <div class="ms-2">
         <button class="btn btn-warning me-2" @click="startSimulation" :disabled="simulationRunning">
-          <i class="fas fa-play"></i> Start Simulation
+          <i class="fas fa-play"></i> Start
         </button>
-        <button class="btn btn-danger" @click="stopSimulation" :disabled="!simulationRunning">
-          <i class="fas fa-stop"></i> Stop Simulation
+        <button class="btn btn-danger me-2" @click="stopSimulation" :disabled="!simulationRunning">
+          <i class="fas fa-stop"></i> Stop
         </button>
-        <button class="btn btn-info" @click="resetSimulation">
-          <i class="fas fa-redo"></i> Reset Simulation
+        <button class="btn btn-info me-2" @click="resetSimulation">
+          <i class="fas fa-redo"></i> Reset
         </button>
         <button class="btn btn-primary" @click="replySimulation">
-          <i class="fas fa-reply"></i> Reply Simulation
+          <i class="fas fa-reply"></i> Reply
         </button>
       </div>
     </div>
