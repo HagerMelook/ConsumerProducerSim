@@ -23,50 +23,44 @@
       </div>
     </div>
 
-    <div class="simulation-area" @mousedown="handleArenaClick" style="background-color: #fff;">
-      <div v-for="(queue, index) in queues" :key="index" class="block m-2"
-        :style="{ left: queue.left + 'px', top: queue.top + 'px', position: 'absolute' }"
-        @mousedown.stop.prevent="startDrag(queue, 'Q', index)">
-        <div class="queue">
-          Q{{ queue.number }}
-          {{ queue.count }}
-        </div>
-      </div>
-
-      <div v-for="(machine, index) in machines" :key="index" class="block m-2"
-        :style="{ left: machine.left + 'px', top: machine.top + 'px', position: 'absolute' }"
-        @mousedown.stop.prevent="startDrag(machine, 'M', index)">
-        <div class="machine">
-          M{{ machine.number }}
-        </div>
-      </div>
-    </div>
+    <div id="simulation-container" class="border p-4 position-relative" style="background-color: #fff;"></div>
   </div>
 </template>
 
 <script>
+import   ShapeFactory  from '../Shapes/ShapeFactory.js';
+
+
 export default {
   data() {
     return {
+      
       queues: [],
       machines: [],
       queueCount: 0,
       machineCount: 0,
       simulationRunning: false,
-      dragging: false,
-      draggedItem: null,
-      initialMouseX: 0,
-      initialMouseY: 0,
-    }
+      stage: null,
+      layer: null,
+      dragBoundFunc: (pos) => ({ x: pos.x, y: pos.y }),
+    };
   },
   methods: {
     addQueue() {
       this.queueCount++;
-      this.queues.push({ number: this.queueCount, count: 0, left: 0, top: 0 });
+      const queue = ShapeFactory.createQueue(this.queueCount, !this.simulationRunning);
+      queue.group.on("dragmove", (event) => this.handleDrag(event, queue.group));
+      this.layer.add(queue.group);
+      this.queues.push(queue);
+      this.stage.draw();
     },
     addMachine() {
       this.machineCount++;
-      this.machines.push({ number: this.machineCount, left: 0, top: 0 });
+      const machine = ShapeFactory.createMachine(this.machineCount, !this.simulationRunning);
+      machine.group.on("dragmove", (event) => this.handleDrag(event, machine.group));
+      this.layer.add(machine.group);
+      this.machines.push(machine);
+      this.stage.draw();
     },
     startSimulation() {
       this.simulationRunning = true;
@@ -84,106 +78,31 @@ export default {
       this.resetSimulation();
       this.startSimulation();
     },
-    startDrag(item, type, index) {
-      if (!this.simulationRunning) {
-        this.dragging = true;
-        this.draggedItem = item;
-        this.initialMouseX = event.clientX;
-        this.initialMouseY = event.clientY;
-
-        // Add mouseup event listener
-        document.addEventListener('mouseup', () => this.stopDrag(type, index));
+    handleDrag(event, item) {
+      if (this.simulationRunning) {
+        event.cancelBubble = true;
+        item.draggable(false);
       }
-    },
-    stopDrag(type, index) {
-      this.dragging = false;
-      this.draggedItem = null;
-
-      // Remove mouseup event listener 
-      document.removeEventListener('mouseup', this.stopDrag);
-
-    },
-    handleDrag(event) {
-      if (this.dragging && this.draggedItem) {
-        const deltaX = event.clientX - this.initialMouseX;
-        const deltaY = event.clientY - this.initialMouseY;
-
-        // Update the position of the dragged item
-        this.draggedItem.left += deltaX;
-        this.draggedItem.top += deltaY;
-
-        // Update initial mouse positions
-        this.initialMouseX = event.clientX;
-        this.initialMouseY = event.clientY;
-      }
-    },
-    handleArenaClick() {
-      this.dragging = false;
-      this.draggedItem = null;
     },
   },
   mounted() {
-    document.addEventListener('mousemove', this.handleDrag);
-  },
-  destroyed() {
-    document.removeEventListener('mousemove', this.handleDrag);
-  },
-  computed: {
-    dragOptions() {
-      return {
-        animation: 0,
-        group: 'machines-queues',
-        draggable: '.machine, .queue',
-      };
-    },
-  },
-  watch: {
-    dragging(value) {
-      if (!value) {
-        this.initialMouseX = 0;
-        this.initialMouseY = 0;
-      }
-    },
-  },
-}
+    this.stage = new Konva.Stage({
+      container: "simulation-container",
+      width: window.innerWidth,
+      height: window.innerHeight - 200,
+    });
 
+    this.layer = new Konva.Layer();
+    this.stage.add(this.layer);
+  },
+};
 </script>
-<style scoped>
-.machine,
-.queue {
-  cursor: move;
-}
 
-.simulation-area {
+<style>
+#simulation-container {
   border: 2px solid #ddd;
   padding: 20px;
   height: 500px;
   position: relative;
-}
-
-.machine {
-  width: 50px;
-  height: 50px;
-  background-color: #3498db;
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.queue {
-  width: 70px;
-  height: 30px;
-  background-color: #e74c3c;
-  color: #fff;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-button {
-  margin-left: 7px;
 }
 </style>
