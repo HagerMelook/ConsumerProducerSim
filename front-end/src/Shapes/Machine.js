@@ -2,8 +2,12 @@ import Konva from "konva";
 
 export default class Machine {
   constructor(number, draggable) {
+    this.id = ""; 
+    this.name = `M${number}`;
+
     this.group = new Konva.Group({
       draggable,
+      name: this.name,
     });
 
     this.circle = new Konva.Circle({
@@ -11,13 +15,12 @@ export default class Machine {
       y: 50,
       radius: 30,
       fill: "#3498db",
-      name: `M${number}`,
     });
 
     this.text = new Konva.Text({
-      text: `M${number}`,
-      x: -this.circle.radius()+50,
-      y: -this.circle.radius()+50,
+      text: this.name,
+      x: -this.circle.radius() + 50,
+      y: -this.circle.radius() + 50,
       fontSize: 14,
       fill: "#fff",
       width: this.circle.radius() * 2,
