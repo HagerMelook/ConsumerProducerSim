@@ -2,8 +2,12 @@ import Konva from "konva";
 
 export default class Queue {
   constructor(number, draggable) {
+    this.id = ""; 
+    this.name = `Q${number}`;
+
     this.group = new Konva.Group({
       draggable,
+      name: this.name, 
     });
 
     this.rect = new Konva.Rect({
@@ -12,11 +16,10 @@ export default class Queue {
       width: 70,
       height: 60,
       fill: "#e74c3c",
-      name: `Q${number}`,
     });
 
     this.text = new Konva.Text({
-      text: `Q${number}`,
+      text: this.name,
       x: -3,
       y: 10,
       fontSize: 14,
@@ -28,7 +31,7 @@ export default class Queue {
     this.countText = new Konva.Text({
       text: "Count: 0",
       x: -3,
-      y:30,
+      y: 30,
       fontSize: 12,
       fill: "#fff",
       width: this.rect.width(),
