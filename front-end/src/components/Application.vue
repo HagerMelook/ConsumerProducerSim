@@ -26,6 +26,18 @@
           </button>
         </div>
       </div>
+      <div class="ms-2 d-flex align-items-center">
+        <label for="productCountInput" class="me-2">Products no:</label>
+        <input
+          id="productCountInput"
+          type="number"
+          class="form-control"
+          v-model="productCountInput"
+          :disabled="simulationRunning"
+          style="width: 80px;"
+          min="0"
+        />
+      </div>
       <div class="ms-2">
         <button class="btn btn-warning me-2" @click="startSimulation" :disabled="simulationRunning">
           <i class="fas fa-play"></i> Start
@@ -46,6 +58,7 @@
   </div>
 </template>
 
+
 <script>
 import   ShapeFactory  from '../Shapes/ShapeFactory.js';
 
@@ -65,6 +78,7 @@ export default {
       selectedQueue: "",
       selectedMachine: "",
       connections: [], 
+      productCountInput: 0,
     };
   },
   methods: {
