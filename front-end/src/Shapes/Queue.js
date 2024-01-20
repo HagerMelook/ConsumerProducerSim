@@ -2,12 +2,13 @@ import Konva from "konva";
 
 export default class Queue {
   constructor(number, draggable) {
-    this.id = ""; 
+    this.id = "";
     this.name = `Q${number}`;
+    this.products = []; // Initialize the products array which will contain the random colored products 
 
     this.group = new Konva.Group({
       draggable,
-      name: this.name, 
+      name: this.name,
     });
 
     this.rect = new Konva.Rect({
@@ -29,7 +30,7 @@ export default class Queue {
     });
 
     this.countText = new Konva.Text({
-      text: "Count: 0",
+      text: `Count: ${this.products.length}`, // Update the countText to be the length of the products array as the count will decrease during simulaton
       x: -3,
       y: 30,
       fontSize: 12,
