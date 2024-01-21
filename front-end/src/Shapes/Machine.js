@@ -4,6 +4,7 @@ export default class Machine {
   constructor(number, draggable) {
     this.id = ""; 
     this.name = `M${number}`;
+    this.currentProductColor = null;
 
     this.group = new Konva.Group({
       draggable,
@@ -31,4 +32,11 @@ export default class Machine {
 
     this.group.add(this.circle, this.text);
   }
+
+  changeColor(color) {
+    // Change the machine color
+    this.circle.fill(color);
+    this.group.draw();
+  }
 }
+
