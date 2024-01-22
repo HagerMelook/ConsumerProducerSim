@@ -3,6 +3,7 @@ import Konva from "konva";
 export default class Queue {
   constructor(number, draggable) {
     this.id = "";
+    this.type = 'queue';
     this.name = `Q${number}`;
     this.products = []; // Initialize the products array which will contain the random colored products 
 
