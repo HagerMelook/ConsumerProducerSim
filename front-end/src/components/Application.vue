@@ -9,18 +9,20 @@
       </div>
       <div class="ms-2">
         <div class="input-group mb-3">
-          <select class="form-select" v-model="selectedQueue">
-            <option value="">Select Queue</option>
-            <option v-for="queue in queues" :key="queue.id" :value="queue.id">
-              {{ queue.name }}
+          <select class="form-select" v-model="selectedFromObject">
+            <option value="">From</option>
+            <option v-for="object in allObjects" :key="object.id" :value="object.id">
+              {{ object.name }}
             </option>
           </select>
-          <select class="form-select" v-model="selectedMachine">
-            <option value="">Select Machine</option>
-            <option v-for="machine in machines" :key="machine.id" :value="machine.id">
-              {{ machine.name }}
+
+          <select class="form-select" v-model="selectedToObject">
+            <option value="">To</option>
+            <option v-for="object in allObjects" :key="object.id" :value="object.id">
+              {{ object.name }}
             </option>
           </select>
+
           <button class="btn btn-primary" @click="connectObjects">
             Connect
           </button>
@@ -28,15 +30,8 @@
       </div>
       <div class="ms-2 d-flex align-items-center">
         <label for="productCountInput" class="me-2">Products no:</label>
-        <input
-          id="productCountInput"
-          type="number"
-          class="form-control"
-          v-model="productCountInput"
-          :disabled="simulationRunning"
-          style="width: 80px;"
-          min="0"
-        />
+        <input id="productCountInput" type="number" class="form-control" v-model="productCountInput"
+          :disabled="simulationRunning" style="width: 80px;" min="0" />
       </div>
       <div class="ms-2">
         <button class="btn btn-warning me-2" @click="startSimulation" :disabled="simulationRunning">
@@ -59,14 +54,15 @@
 </template>
 
 
+
 <script>
-import   ShapeFactory  from '../Shapes/ShapeFactory.js';
+import ShapeFactory from '../Shapes/ShapeFactory.js';
 
 
 export default {
   data() {
     return {
-      
+
       queues: [],
       machines: [],
       queueCount: 0,
@@ -77,8 +73,13 @@ export default {
       dragBoundFunc: (pos) => ({ x: pos.x, y: pos.y }),
       selectedQueue: "",
       selectedMachine: "",
-      connections: [], 
+      connections: [],
+      productSimulationInterval: null,
       productCountInput: 0,
+      productCount: 0,
+      selectedFromObject: "",
+      selectedToObject: "",
+      allObjects: [], // Combined array of machines and queues
     };
   },
   methods: {
@@ -88,7 +89,7 @@ export default {
       queue.group.on("dragmove", (event) => this.handleDrag(event, queue.group));
       this.layer.add(queue.group);
       this.queues.push(queue);
-      console.log(queue);
+      this.allObjects.push(queue);
       this.stage.draw();
     },
     addMachine() {
@@ -97,12 +98,16 @@ export default {
       machine.group.on("dragmove", (event) => this.handleDrag(event, machine.group));
       this.layer.add(machine.group);
       this.machines.push(machine);
+      this.allObjects.push(machine);
       this.stage.draw();
     },
     startSimulation() {
       this.simulationRunning = true;
       /////////////////////////////
     },
+
+
+
     stopSimulation() {
       this.simulationRunning = false;
       ///////////////////////////
@@ -116,9 +121,10 @@ export default {
       this.startSimulation();
     },
     handleDrag(event, item) {
-      if (this.simulationRunning) {
+      if (!this.simulationRunning) {
+        console.log("s")
         event.cancelBubble = true;
- 
+        this.updateArrows();
       }
     },
     // update the arrows when objects are dragged
@@ -129,18 +135,21 @@ export default {
 
         if (queue && machine) {
           const queueCenter = {
-          x: queue.group.getClientRect().x + queue.group.getClientRect().width / 2,
-          y: queue.group.getClientRect().y + queue.group.getClientRect().height / 2,
+            x: queue.group.getClientRect().x + queue.group.getClientRect().width,
+            y: queue.group.getClientRect().y + queue.group.getClientRect().height / 2,
           };
 
           const machineCenter = {
-            x: machine.group.getClientRect().x + machine.group.getClientRect().width / 2,
+            x: machine.group.getClientRect().x + machine.group.getClientRect().width,
             y: machine.group.getClientRect().y + machine.group.getClientRect().height / 2,
           };
-          const arrow = this.layer.findOne((node) => node.name() === `arrow-${queue.id}-${machine.id}`);
+          var arrow = this.layer.findOne((node) => node.name() === `arrow-${queue.id}-${machine.id}`);
 
           if (arrow) {
-            arrow.points([queueCenter.x, queueCenter.y, machineCenter.x, machineCenter.y]);
+            arrow.points([queueCenter.x, queueCenter.y, machineCenter.x - machine.group.getClientRect().width, machineCenter.y]);
+          } else {
+            arrow = this.layer.findOne((node) => node.name() === `arrow-${machine.id}-${queue.id}`);
+            arrow.points([machineCenter.x, machineCenter.y, queueCenter.x - queue.group.getClientRect().width, queueCenter.y]);
           }
         }
       });
@@ -148,70 +157,78 @@ export default {
       this.stage.draw();
     },
 
-    // Modifying handleDrag method to call updateArrows
-    handleDrag(event, item) {
-      this.updateArrows();
-    },
 
     connectObjects() {
-      
-      if (this.selectedQueue && this.selectedMachine) {
-        const queue = this.queues.find((q) => q.id === this.selectedQueue);
-        const machine = this.machines.find((m) => m.id === this.selectedMachine);
+      if (this.selectedFromObject && this.selectedToObject) {
 
-        if (queue && machine) {
+        const fromObject = this.allObjects.find((item) => item.id === this.selectedFromObject);
+        const toObject = this.allObjects.find((item) => item.id === this.selectedToObject);
 
+        if (fromObject && toObject) {
+          if (fromObject.type === 'queue' && toObject.type === 'machine') {
+            const queue = fromObject;
+            const machine = toObject;
+            if (!this.isConnectionExists(queue.id, machine.id)) {
+              const connection = {
+                queueId: queue.id,
+                machineId: machine.id,
+              };
+              this.connections.push(connection);
+              this.drawArrow(queue.group, machine.group, queue.id, machine.id);
+            } else {
+              alert("Connection already exists between this machine and queue.");
+            }
+          } else if (fromObject.type === 'machine' && toObject.type === 'queue') {
+            const machine = fromObject;
+            const queue = toObject;
+            if (!this.isConnectionExists(queue.id, machine.id)) {
+              const connection = {
+                queueId: queue.id,
+                machineId: machine.id,
+              };
+              this.connections.push(connection);
+              this.drawArrow(machine.group, queue.group, machine.id, queue.id);
 
-          //  a connection already exists
-          const existingConnection = this.connections.find(
-            (connection) => connection.queueId === queue.id && connection.machineId === machine.id
-          );
-
-          if (existingConnection) {
-            alert("Connection already exists between this machine and queue.");
-            return;
+              console.log(`Connected Machine ${machine.name} to Queue ${queue.name}`);
+            } else {
+              alert("Connection already exists between this machine and queue.");
+            }
           }
-
-          const queueCenter = {
-            x: queue.group.getClientRect().x + queue.group.getClientRect().width / 2,
-            y: queue.group.getClientRect().y + queue.group.getClientRect().height / 2,
-          };
-
-          const machineCenter = {
-            x: machine.group.getClientRect().x + machine.group.getClientRect().width / 2,
-            y: machine.group.getClientRect().y + machine.group.getClientRect().height / 2,
-          };
-
-          // Generate a unique name for the arrow based on connected objects
-          const arrowName = `arrow-${queue.id}-${machine.id}`;
-
-          const arrow = new Konva.Arrow({
-            name: arrowName,
-            points: [queueCenter.x, queueCenter.y, machineCenter.x, machineCenter.y],
-            pointerLength: 10,
-            pointerWidth: 10,
-            fill: "black",
-            stroke: "black",
-            strokeWidth: 2,
-          });
-
-          this.layer.add(arrow);
-
-          // Move the queues and machines to the top
-          queue.group.moveToTop();
-          machine.group.moveToTop();
-
-          this.stage.draw();
-
-          // Save the connection
-          const connection = {
-            queueId: queue.id,
-            machineId: machine.id,
-          };
-          this.connections.push(connection);
         }
+      } else {
+        alert("Please select 'From' and 'To' objects.");
       }
     },
+    isConnectionExists(queueId, machineId) {
+      return this.connections.some((connection) => connection.queueId === queueId && connection.machineId === machineId);
+    },
+    drawArrow(fromGroup, toGroup, fromId, toId) {
+      const fromCenter = {
+        x: fromGroup.getClientRect().x + fromGroup.getClientRect().width,
+        y: fromGroup.getClientRect().y + fromGroup.getClientRect().height / 2,
+      };
+
+      const toCenter = {
+        x: toGroup.getClientRect().x,
+        y: toGroup.getClientRect().y + toGroup.getClientRect().height / 2,
+      };
+
+
+      const arrowName = `arrow-${fromId}-${toId}`;
+      console.log(arrowName)
+      const arrow = new Konva.Arrow({
+        name: arrowName,
+        points: [fromCenter.x, fromCenter.y, toCenter.x, toCenter.y],
+        pointerLength: 10,
+        pointerWidth: 10,
+        fill: "black",
+        stroke: "black",
+        strokeWidth: 2,
+      });
+      this.layer.add(arrow);
+      this.stage.draw();
+    },
+
 
 
 
