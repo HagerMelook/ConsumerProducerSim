@@ -3,6 +3,7 @@ import Konva from "konva";
 export default class Machine {
   constructor(number, draggable) {
     this.id = ""; 
+    this.type = 'machine';
     this.name = `M${number}`;
     this.currentProductColor = null;
 
