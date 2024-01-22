@@ -1,4 +1,6 @@
-package com;
+package com.example.demo;
+
+
 
 public class Product {
     String color;

@@ -1,4 +1,6 @@
-package com;
+package com.example.demo;
+
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -102,3 +104,4 @@ public class ConcurrencyService {
         possibleColors[49]="Cotton";
     }
 }
+
