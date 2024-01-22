@@ -16,7 +16,10 @@ export default class Queue {
       y: 0,
       width: 70,
       height: 60,
-      fill: "#e74c3c",
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 2,
+      cornerRadius: 2,
     });
 
     this.text = new Konva.Text({
@@ -24,7 +27,7 @@ export default class Queue {
       x: -3,
       y: 10,
       fontSize: 14,
-      fill: "#fff",
+      fill: "#000000",
       width: this.rect.width(),
       align: "center",
     });
@@ -34,7 +37,7 @@ export default class Queue {
       x: -3,
       y: 30,
       fontSize: 12,
-      fill: "#fff",
+      fill: "#000000",
       width: this.rect.width(),
       align: "center",
     });
