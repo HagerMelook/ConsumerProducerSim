@@ -15,7 +15,10 @@ export default class Machine {
       x: 50,
       y: 50,
       radius: 30,
-      fill: "#3498db",
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 2,
+      cornerRadius: 2,
     });
 
     this.text = new Konva.Text({
@@ -23,7 +26,7 @@ export default class Machine {
       x: -this.circle.radius() + 50,
       y: -this.circle.radius() + 50,
       fontSize: 14,
-      fill: "#fff",
+      fill: "#000000",
       width: this.circle.radius() * 2,
       height: this.circle.radius() * 2,
       align: "center",
