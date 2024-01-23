@@ -14,6 +14,32 @@ public class simulationGraph {
     HashMap<String,Object> result = new HashMap<>();
     ArrayList<Object> front = new ArrayList<>();
 
+    
+
+    public String[] getMachines() {
+        return machines;
+    }
+
+    public void setMachines(String[] machines) {
+        this.machines = machines;
+    }
+
+    public String[] getQueues() {
+        return queues;
+    }
+
+    public void setQueues(String[] queues) {
+        this.queues = queues;
+    }
+
+    public ArrayList<String[]> getConnections() {
+        return connections;
+    }
+
+    public void setConnections(ArrayList<String[]> connections) {
+        this.connections = connections;
+    }
+
     public simulationGraph(int productsNum, String[] machines, String[] queues, ArrayList<String[]> connections) {
         this.productsNum = productsNum;
         this.machines = machines;
