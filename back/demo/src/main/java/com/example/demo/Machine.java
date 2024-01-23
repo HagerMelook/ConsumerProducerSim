@@ -1,85 +1,92 @@
 package com.example.demo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
-import java.util.Set;
-
-import javax.swing.text.StyledEditorKit.BoldAction;
 
 public class Machine implements Runnable {
+    
     Thread thread = new Thread(this);
     private Long processingTime;
     Random rand = new Random();
-    Queue<Product> eQueue = new LinkedList<>();
-    Queue<Product> nextQueue = new LinkedList<>();
-    HashMap<String, String[]> connection;
+    Queue<Product> startQ = new LinkedList<>();
+    Queue<Product> nextQ = new LinkedList<>();
     String machineID;
     int productsNum;
+    String machineTmpColor = null;
+    HashMap<String,Object> result;
+    String startID;
+    String endID;
+    ArrayList<Object> front;
+   
 
-    int queueNo;
-
-    public Machine(Queue<Product> queue, int productsNum, HashMap<String, String[]> connection, String machineID) {
-        this.connection = connection;
+    public Machine(Queue<Product> startQ, String startID, Queue<Product> nextQ, String endID,  String machineID, int productsNum, HashMap<String,Object> result, ArrayList<Object> front) {
+        this.startQ = startQ;
+        this.nextQ = nextQ;
+        this.front = front;
         this.machineID = machineID;
         this.productsNum = productsNum;
-        eQueue = queue;
+        this.result =result;
+        this.endID = endID;
+        this.startID = startID;
         thread.setName(machineID);
         thread.start();
     }
 
-    public Machine(Queue<Product> queue, int productsNum) {
-        this.productsNum = productsNum;
-        eQueue = queue;
-        thread.start();
+
+    private void updateResult(String key, Object value){
+        for(String k: result.keySet()){
+            if(k.equals(key)){
+                result.put(key, value);
+            }
+        }
     }
 
-    public void setQueue(Queue queue) {
-        queueNo = ConcurrencyService.queues.indexOf(queue);
-        eQueue = queue;
+    private ArrayList<Object> convertToArrayList(){
+         ArrayList <Object> r = new ArrayList<>();
+        for(String key : result.keySet()){
+            r.add(result.get(key));
+        }
+        return r;
     }
 
     @Override
     public void run() {
         Product product;
-        for (String q : connection.get(machineID)) {
-            Boolean created = false;
-            for (Thread t : Thread.getAllStackTraces().keySet()) {
-                if (t.getName().equals(q)) {
-                    created = true;
-                }
-            }
-            if (!created){
-                 new producer(productsNum, nextQueue, q, connection);
-            }
-               
-        }
         for (int i = 0; i < productsNum; i++) {
-            synchronized (eQueue) {
-                while (eQueue.isEmpty()) {
+            synchronized (startQ) {
+                while (startQ.isEmpty()) {
                     try {
-                        eQueue.wait();
+                        startQ.wait();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                product = eQueue.peek();
-                nextQueue.add(product);
-                eQueue.remove();
+                product = startQ.peek();
+                startQ.remove();
+                updateResult(startID, startQ.size());
             }
-            product.setTempColor(product.getColor());
             try {
                 processingTime = rand.nextLong(3000);
+                machineTmpColor = product.getColor();
+                updateResult(machineID, machineTmpColor);
+                System.out.println(result);
+                front.add(convertToArrayList());
                 Thread.sleep(processingTime);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            synchronized (nextQueue) {
-                nextQueue.notify();
+            synchronized (nextQ) {
+                nextQ.add(product);
+                machineTmpColor = null;
+                nextQ.notify();
             }
-            System.out.println(machineID + " color: " + product.getColor());
-            System.out.println("queue 1 size: " + eQueue.size());
+            updateResult(machineID, machineTmpColor);
+            updateResult(endID, nextQ.size());
+            front.add(convertToArrayList());
+            System.out.println(result);
         }
 
     }

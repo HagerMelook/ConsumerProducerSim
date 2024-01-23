@@ -14,58 +14,43 @@ public class producer implements Runnable {
     Queue<Product> tempQueue = new LinkedList<>();
     String queueID;
     HashMap<String, String[]> connection;
+    HashMap<String, Object> result;
 
-    public Queue<Product> getQueue() {
-        return queue;
-    }
 
-    public producer(int productsNum, Queue<Product> products, String ID, HashMap<String, String[]> conncetion) {
+    public producer(int productsNum, Queue<Product> queueElement ,Queue<Product> products, String ID, HashMap<String, Object> result) {
         this.productsNum = productsNum;
         tempQueue = products;
         queueID = ID;
-        this.connection = conncetion;
+        this.result = result;
+        this.queue = queueElement;
         queuThread.setName(ID);
         queuThread.start();
+    }
+
+    public void updateResult(String key, Object value) {
+        for (String k : result.keySet()) {
+            if (k.equals(key)) {
+                result.put(key, value);
+            }
+        }
     }
 
     @Override
     public void run() {
         for (Long i = 1l; i <= productsNum; i++) {
-            if (queueID.equals("Q1")) {
-                Random rand = new Random();
-                interarrivalTime = rand.nextInt(3000);
-                try {
-                    queuThread.sleep(interarrivalTime);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                System.out.println("products num:"+i);
-                synchronized(queue) {
-                    queue.add(tempQueue.peek());
-                    tempQueue.remove();
-                    queue.notify();
-                }
-            } else {
-                if (connection.get(queueID) == null)
-                    ;
-                else {
-                    for (String machine : connection.get(queueID)) {
-                        new Machine(getQueue(), productsNum, connection, machine);
-                    }
-                }
-                synchronized(tempQueue) {
-                    while(tempQueue.isEmpty()){
-                        try {
-                            tempQueue.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    queue.add(tempQueue.element());
-                    System.out.println(queuThread.getName()+"    size: "+queue.size());
-                    tempQueue.remove();
-                    tempQueue.notify();
-                }
+            Random rand = new Random();
+            interarrivalTime = rand.nextInt(3000);
+            try {
+                queuThread.sleep(interarrivalTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("products num:" + i);
+            synchronized (queue) {
+                queue.add(tempQueue.peek());
+                tempQueue.remove();
+                updateResult(queueID, queue.size());
+                queue.notify();
             }
         }
     }
